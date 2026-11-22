@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Token Launch Radar — Empirical Pre-Token Valuation &amp; Farm Board</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-board">Skip to ranked board</a>
+
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="brand-block">
+        <div class="eyebrow">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          <span>PRE-TOKEN VALUATION &amp; FARM INTELLIGENCE</span>
+          <span class="sep">&middot;</span>
+          <span id="snapshot-date">Snapshot</span>
+        </div>
+        <h1>Token Launch Radar</h1>
+        <p class="subtitle">
+          Pre-token protocols from DefiLlama's sealed snapshot ranked by empirical peer-calibrated implied value with concrete farm playbooks.
+          <span class="caveat">Model estimates only; recording no token is not proof none exists.</span>
+        </p>
+      </div>
+      <div class="masthead-meta">
+        <div class="formula-card">
+          <div class="formula-label">EMPIRICAL PEER MODEL <span id="model-badge" class="pill pill-ink">v2</span></div>
+          <div class="formula-eq">Implied = TVL &times; Sector<sub>EB</sub> &times; Growth<sub>7d</sub> &times; Longevity &times; Chains</div>
+          <div class="formula-foot" id="formula-foot">Calibrated on live non-CEX comps</div>
+        </div>
+        <div class="masthead-actions">
+          <button type="button" id="toggle-insights-btn" class="btn btn-outline" aria-expanded="true" aria-controls="insights-row">Charts</button>
+          <button type="button" id="toggle-sandbox-btn" class="btn btn-outline" aria-expanded="false" aria-controls="model-sandbox">Sandbox</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-board" class="shell" tabindex="-1">
+    <section class="kpi-strip" id="kpi-strip" aria-label="Snapshot summary metrics"></section>
+
+    <section class="insights-row" id="insights-row" aria-label="Empirical sector calibration">
+      <div class="card sector-card">
+        <div class="card-head">
+          <h2>Empirical Sector Multiples (MCap/TVL)</h2>
+          <span class="legend-inline"><i class="swatch swatch-emerald"></i>Shrunk EB <i class="swatch swatch-ink"></i>Global Median</span>
+        </div>
+        <div id="sector-chart" class="sector-chart"></div>
+      </div>
+      <div class="card distribution-card">
+        <div class="card-head">
+          <h2>Universe Coverage &amp; Strict Token Separation</h2>
+        </div>
+        <div id="coverage-breakdown" class="coverage-breakdown"></div>
+      </div>
+    </section>
+
+    <section id="model-sandbox" class="card sandbox-panel" hidden aria-label="Interactive valuation model sandbox">
+      <div class="sandbox-head">
+        <div>
+          <h2>Interactive Valuation Model Sandbox</h2>
+          <p class="card-sub">Tune weights live to re-score and re-rank all pre-token protocols. Zero hardcoded names.</p>
+        </div>
+        <button type="button" id="reset-model-btn" class="btn btn-subtle">Reset Defaults</button>
+      </div>
+      <div class="sandbox-grid">
+        <label class="slider-field">
+          <div class="slider-top"><span>Mode</span><strong id="val-mode-label">Peer-Calibrated</strong></div>
+          <select id="ctrl-mode" class="select-input">
+            <option value="peer">Peer-Calibrated Sector Multiples</option>
+            <option value="flat">Uniform Global Multiple</option>
+          </select>
+        </label>
+        <label class="slider-field">
+          <div class="slider-top"><span>Base Scale</span><strong id="val-base-scale" class="mono">1.00x</strong></div>
+          <input type="range" id="ctrl-base-scale" min="0.50" max="1.75" step="0.05" value="1.00">
+        </label>
+        <label class="slider-field">
+          <div class="slider-top"><span>7d Growth Weight</span><strong id="val-growth-w" class="mono">0.45</strong></div>
+          <input type="range" id="ctrl-growth-w" min="0.00" max="1.00" step="0.05" value="0.45">
+        </label>
+        <label class="slider-field">
+          <div class="slider-top"><span>Longevity Span</span><strong id="val-mat-span" class="mono">0.45</strong></div>
+          <input type="range" id="ctrl-mat-span" min="0.00" max="0.80" step="0.05" value="0.45">
+        </label>
+        <label class="slider-field">
+          <div class="slider-top"><span>Chain Premium</span><strong id="val-chain-step" class="mono">+3.0%</strong></div>
+          <input type="range" id="ctrl-chain-step" min="0.00" max="0.08" step="0.005" value="0.03">
+        </label>
+      </div>
+    </section>
+
+    <section class="toolbar-card card" aria-label="View switcher and filters">
+      <div class="toolbar-top">
+        <div class="view-tabs" role="tablist" aria-label="Board views">
+          <button type="button" class="tab-btn is-active" data-view="board" role="tab" aria-selected="true">Pre-Token Board <span class="tab-count" id="cnt-board">0</span></button>
+          <button type="button" class="tab-btn" data-view="watchlist" role="tab" aria-selected="false">Watchlist (&ge;$50M) <span class="tab-count" id="cnt-watchlist">0</span></button>
+          <button type="button" class="tab-btn" data-view="early" role="tab" aria-selected="false">Early Radar (&lt;$50M) <span class="tab-count" id="cnt-early">0</span></button>
+          <button type="button" class="tab-btn tab-live" data-view="live" role="tab" aria-selected="false">Live-Token Comps <span class="tab-count" id="cnt-live">0</span></button>
+        </div>
+        <div class="active-filter-bar" id="active-filter-bar"></div>
+      </div>
+
+      <div class="filter-bar">
+        <input type="search" id="filter-search" class="text-input search-input" placeholder="Search protocol, category, or chain..." aria-label="Search protocols">
+        <select id="filter-category" class="select-input" aria-label="Filter by category"><option value="all">All Categories</option></select>
+        <select id="filter-chain" class="select-input" aria-label="Filter by chain"><option value="all">All Chains</option></select>
+        <select id="filter-growth" class="select-input" aria-label="Filter by 7d TVL momentum">
+          <option value="all">Any 7d Momentum</option>
+          <option value="positive">Growing (&gt; 0% 7d)</option>
+          <option value="strong">Surging (&ge; +5% 7d)</option>
+          <option value="negative">Outflow (&lt; 0% 7d)</option>
+        </select>
+        <select id="filter-gas" class="select-input" aria-label="Filter by farm gas">
+          <option value="all">Any Gas Profile</option>
+          <option value="low">Low-Fee (&le;$0.25/tx)</option>
+          <option value="budget">Starter (&le;$125)</option>
+        </select>
+        <select id="sort-select" class="select-input" aria-label="Sort rows">
+          <option value="rank">Sort: Implied Value</option>
+          <option value="tvl">Sort: TVL</option>
+          <option value="growth">Sort: 7d Growth</option>
+          <option value="multiple">Sort: Multiple</option>
+          <option value="age">Sort: Longevity</option>
+          <option value="gas">Sort: Lowest Gas</option>
+        </select>
+        <button type="button" id="clear-filters-btn" class="btn btn-subtle">Clear</button>
+      </div>
+    </section>
+
+    <section class="table-card card" aria-label="Protocol table">
+      <div class="table-wrap">
+        <table class="radar-table" id="radar-table">
+          <thead id="table-head"></thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+      <div class="table-footer" id="table-footer"></div>
+    </section>
+  </main>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+  <aside class="detail-drawer" id="detail-drawer" aria-label="Protocol valuation and farm playbook" hidden>
+    <div class="drawer-inner" id="drawer-content"></div>
+  </aside>
+
+  <script src="../data.js"></script>
+  <script src="radar.js"></script>
+</body>
+</html>
